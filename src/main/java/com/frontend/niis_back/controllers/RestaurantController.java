@@ -50,6 +50,7 @@ public class RestaurantController {
         }
     }
 
+
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateRestaurant(@PathVariable String id, @RequestBody RestaurantDTO restaurantDTO) {
         try {

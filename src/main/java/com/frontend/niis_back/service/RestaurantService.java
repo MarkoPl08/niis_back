@@ -42,11 +42,11 @@ public class RestaurantService {
     }
 
     public void updateRestaurant(RestaurantDTO restaurantDTO) throws ExecutionException, InterruptedException {
+        // Create a Restaurant object from the DTO
         Restaurant restaurant = new Restaurant(restaurantDTO.getName(), restaurantDTO.getZipCode(), restaurantDTO.getLocation());
 
-        restaurant.setId(restaurantDTO.getId());
-
-        restaurantRepository.updateRestaurant(restaurant);
+        // Now pass the ID and the Restaurant object to the repository for updating
+        restaurantRepository.updateRestaurant(restaurantDTO.getId(), restaurant);
     }
 
     public void deleteRestaurant(String restaurantId) throws ExecutionException, InterruptedException {

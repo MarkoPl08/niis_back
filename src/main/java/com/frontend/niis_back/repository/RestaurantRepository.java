@@ -29,8 +29,8 @@ public class RestaurantRepository {
         return future.get().getId();
     }
 
-    public void updateRestaurant(Restaurant restaurant) throws ExecutionException, InterruptedException {
-        DocumentReference docRef = firestore.collection("restaurant").document(restaurant.getId());
+    public void updateRestaurant(String id, Restaurant restaurant) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = firestore.collection("restaurant").document(id);
         Map<String, Object> restaurantMap = new HashMap<>();
         restaurantMap.put("name", restaurant.getName());
         restaurantMap.put("zipCode", restaurant.getZipCode());

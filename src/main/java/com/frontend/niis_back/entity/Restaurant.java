@@ -2,7 +2,6 @@ package com.frontend.niis_back.entity;
 
 public class Restaurant {
 
-    private String id;
     private String name;
     private Number location;
     private String zipCode;
@@ -11,14 +10,6 @@ public class Restaurant {
         this.name = name;
         this.location = location;
         this.zipCode = zipCode;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getName() {
