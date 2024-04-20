@@ -37,17 +37,15 @@ public class RestaurantService {
 
     public String saveRestaurant(RestaurantDTO restaurantDTO) throws ExecutionException, InterruptedException {
         Restaurant restaurant = new Restaurant(restaurantDTO.getName(),
-                restaurantDTO.getZipCode(), restaurantDTO.getLocation());
+                restaurantDTO.getLocation(), restaurantDTO.getZipCode());
         return restaurantRepository.createRestaurant(restaurant);
     }
 
     public void updateRestaurant(RestaurantDTO restaurantDTO) throws ExecutionException, InterruptedException {
-        // Create a Restaurant object from the DTO
-        Restaurant restaurant = new Restaurant(restaurantDTO.getName(), restaurantDTO.getZipCode(), restaurantDTO.getLocation());
-
-        // Now pass the ID and the Restaurant object to the repository for updating
+        Restaurant restaurant = new Restaurant(restaurantDTO.getName(), restaurantDTO.getLocation(), restaurantDTO.getZipCode());
         restaurantRepository.updateRestaurant(restaurantDTO.getId(), restaurant);
     }
+
 
     public void deleteRestaurant(String restaurantId) throws ExecutionException, InterruptedException {
         reviewRepository.deleteAllReviewsForRestaurant(restaurantId);

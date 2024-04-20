@@ -3,10 +3,10 @@ package com.frontend.niis_back.entity;
 public class Restaurant {
 
     private String name;
-    private Number location;
-    private String zipCode;
+    private String location;
+    private Number zipCode;
 
-    public Restaurant(String name, Number location, String zipCode) {
+    public Restaurant(String name, String location, Number zipCode) {
         this.name = name;
         this.location = location;
         this.zipCode = zipCode;
@@ -20,19 +20,19 @@ public class Restaurant {
         this.name = name;
     }
 
-    public Number getLocation() {
+    public String getLocation() {
         return location;
     }
 
-    public void setLocation(Number location) {
+    public void setLocation(String location) {
         this.location = location;
     }
 
-    public String getZipCode() {
+    public Number getZipCode() {
         return zipCode;
     }
 
-    public void setZipCode(String zipCode) {
+    public void setZipCode(Number zipCode) {
         this.zipCode = zipCode;
     }
 }
