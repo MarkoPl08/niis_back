@@ -25,7 +25,6 @@ public class ApiService {
         this.objectMapper = objectMapper;
     }
 
-    // Restaurants
     public List<RestaurantDTO> getAllRestaurants() throws JsonProcessingException {
         ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/restaurant", String.class);
         System.out.println("Received JSON: " + response.getBody());
@@ -40,15 +39,12 @@ public class ApiService {
 
     public void updateRestaurant(String id, RestaurantDTO restaurantDTO) throws JsonProcessingException {
         restTemplate.put(baseUrl + "/restaurant/" + id, restaurantDTO);
-        // Assuming PUT returns void; if it returns content, you can log and deserialize similarly
     }
 
     public void deleteRestaurant(String restaurantId) {
         restTemplate.delete(baseUrl + "/restaurant/" + restaurantId);
-        // DELETE typically does not return content, if it does, handle similarly
     }
 
-    // Reviews
     public List<ReviewDTO> getReviewsForRestaurant(String restaurantId) throws JsonProcessingException {
         ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/restaurant/" + restaurantId + "/reviews", String.class);
         System.out.println("Received JSON: " + response.getBody());
@@ -63,11 +59,9 @@ public class ApiService {
 
     public void updateReview(String restaurantId, String reviewId, ReviewDTO reviewDTO) throws JsonProcessingException {
         restTemplate.put(baseUrl + "/restaurant/" + restaurantId + "/reviews/" + reviewId, reviewDTO);
-        // Assuming PUT returns void; if it returns content, you can log and deserialize similarly
     }
 
     public void deleteReview(String restaurantId, String reviewId) {
         restTemplate.delete(baseUrl + "/restaurant/" + restaurantId + "/reviews/" + reviewId);
-        // DELETE typically does not return content, if it does, handle similarly
     }
 }
