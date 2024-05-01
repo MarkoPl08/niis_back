@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 public class RestaurantRepository {
 
     private final Firestore firestore;
+    private static final String RESTAURANT_COLLECTION = "restaurant";
 
     @Autowired
     public RestaurantRepository(Firestore firestore) {
@@ -21,16 +22,16 @@ public class RestaurantRepository {
     }
 
     public QuerySnapshot getAllRestaurant() throws ExecutionException, InterruptedException {
-        return firestore.collection("restaurant").get().get();
+        return firestore.collection(RESTAURANT_COLLECTION).get().get();
     }
 
     public String createRestaurant(Restaurant restaurant) throws ExecutionException, InterruptedException {
-        ApiFuture<DocumentReference> future = firestore.collection("restaurant").add(restaurant);
+        ApiFuture<DocumentReference> future = firestore.collection(RESTAURANT_COLLECTION).add(restaurant);
         return future.get().getId();
     }
 
     public void updateRestaurant(String id, Restaurant restaurant) throws ExecutionException, InterruptedException {
-        DocumentReference docRef = firestore.collection("restaurant").document(id);
+        DocumentReference docRef = firestore.collection(RESTAURANT_COLLECTION).document(id);
         Map<String, Object> restaurantMap = new HashMap<>();
         restaurantMap.put("name", restaurant.getName());
         restaurantMap.put("zipCode", restaurant.getZipCode());
@@ -41,6 +42,6 @@ public class RestaurantRepository {
     }
 
     public void deleteRestaurant(String restaurantId) throws ExecutionException, InterruptedException {
-        firestore.collection("restaurant").document(restaurantId).delete().get();
+        firestore.collection(RESTAURANT_COLLECTION).document(restaurantId).delete().get();
     }
 }

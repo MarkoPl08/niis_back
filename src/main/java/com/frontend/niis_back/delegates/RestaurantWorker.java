@@ -1,13 +1,14 @@
 package com.frontend.niis_back.delegates;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.frontend.niis_back.dto.RestaurantDTO;
 import com.frontend.niis_back.dto.ReviewDTO;
 import com.frontend.niis_back.service.ApiService;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.client.api.worker.JobClient;
-import io.camunda.zeebe.spring.client.annotation.ZeebeWorker;
+import io.camunda.zeebe.spring.client.annotation.JobWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,8 @@ import java.util.Map;
 @Component
 public class RestaurantWorker {
 
+    private static final Logger logger = LoggerFactory.getLogger(RestaurantWorker.class);
+    private static final String RESTAURANT_ID = "restaurantId";
     private final ApiService apiService;
     private final ObjectMapper objectMapper;
 
@@ -27,7 +30,7 @@ public class RestaurantWorker {
         this.objectMapper = objectMapper;
     }
 
-    @ZeebeWorker(type = "getAllRestaurants")
+    @JobWorker(type = "getAllRestaurants")
     public void getAllRestaurants(final JobClient client, final ActivatedJob job) {
         try {
             List<RestaurantDTO> restaurants = apiService.getAllRestaurants();
@@ -41,6 +44,7 @@ public class RestaurantWorker {
                     .send()
                     .join();
         } catch (Exception e) {
+            logger.error("Exception in getAllRestaurants", e);
             client.newFailCommand(job.getKey())
                     .retries(job.getRetries() - 1)
                     .errorMessage(e.getMessage())
@@ -49,17 +53,17 @@ public class RestaurantWorker {
         }
     }
 
-    @ZeebeWorker(type = "createRestaurant")
+    @JobWorker(type = "createRestaurant")
     public void createRestaurant(final JobClient client, final ActivatedJob job) {
         try {
             Map<String, Object> variables = job.getVariablesAsMap();
-            System.out.println("Received Variables Map: " + variables);
+            logger.info("Received Variables Map: {}", variables);
 
             Object restaurantObj = variables.get("restaurant");
             if (restaurantObj instanceof Map) {
                 Map<String, Object> restaurantMap = (Map<String, Object>) restaurantObj;
                 String restaurantJson = objectMapper.writeValueAsString(restaurantMap);
-                System.out.println("Received restaurant variable (JSON dump): " + restaurantJson);
+                logger.info("Received restaurant variable (JSON dump): {}", restaurantJson);
 
                 RestaurantDTO restaurantDTO = objectMapper.readValue(restaurantJson, RestaurantDTO.class);
                 RestaurantDTO createdRestaurant = apiService.createRestaurant(restaurantDTO);
@@ -72,7 +76,7 @@ public class RestaurantWorker {
                 throw new IllegalStateException("Expected a Map for 'restaurant', received type: " + (restaurantObj == null ? "null" : restaurantObj.getClass().getSimpleName()));
             }
         } catch (Exception e) {
-            System.err.println("Exception in createRestaurant: " + e.getMessage());
+            logger.error("Exception in createRestaurant", e);
             client.newFailCommand(job.getKey())
                     .retries(job.getRetries() - 1)
                     .errorMessage(e.getMessage())
@@ -81,7 +85,7 @@ public class RestaurantWorker {
         }
     }
 
-    @ZeebeWorker(type = "updateRestaurant")
+    @JobWorker(type = "updateRestaurant")
     public void updateRestaurant(final JobClient client, final ActivatedJob job) {
         try {
             Map<String, Object> variables = job.getVariablesAsMap();
@@ -92,7 +96,7 @@ public class RestaurantWorker {
 
             client.newCompleteCommand(job.getKey()).send().join();
         } catch (Exception e) {
-            System.err.println("Exception in updateRestaurant: " + e.getMessage());
+            logger.error("Exception in updateRestaurant", e);
             client.newFailCommand(job.getKey())
                     .retries(job.getRetries() - 1)
                     .errorMessage(e.getMessage())
@@ -102,13 +106,14 @@ public class RestaurantWorker {
     }
 
 
-    @ZeebeWorker(type = "deleteRestaurant")
+    @JobWorker(type = "deleteRestaurant")
     public void deleteRestaurant(final JobClient client, final ActivatedJob job) {
         try {
-            String restaurantId = job.getVariablesAsMap().get("restaurantId").toString();
+            String restaurantId = job.getVariablesAsMap().get(RESTAURANT_ID).toString();
             apiService.deleteRestaurant(restaurantId);
             client.newCompleteCommand(job.getKey()).send().join();
         } catch (Exception e) {
+            logger.error("Exception in deleteRestaurant", e);
             client.newFailCommand(job.getKey())
                     .retries(job.getRetries() - 1)
                     .errorMessage(e.getMessage())
@@ -117,10 +122,10 @@ public class RestaurantWorker {
         }
     }
 
-    @ZeebeWorker(type = "getReviews")
+    @JobWorker(type = "getReviews")
     public void getReviews(final JobClient client, final ActivatedJob job) {
         try {
-            String restaurantId = job.getVariablesAsMap().get("restaurantId").toString();
+            String restaurantId = job.getVariablesAsMap().get(RESTAURANT_ID).toString();
             List<ReviewDTO> reviews = apiService.getReviewsForRestaurant(restaurantId);
 
             String reviewsJson = objectMapper.writeValueAsString(reviews);
@@ -130,7 +135,7 @@ public class RestaurantWorker {
                     .send()
                     .join();
         } catch (Exception e) {
-            System.err.println("Exception in getReviews: " + e.getMessage());
+            logger.error("Exception in getReviews", e);
             client.newFailCommand(job.getKey())
                     .retries(job.getRetries() - 1)
                     .errorMessage(e.getMessage())
@@ -139,11 +144,11 @@ public class RestaurantWorker {
         }
     }
 
-    @ZeebeWorker(type = "createReview")
+    @JobWorker(type = "createReview")
     public void createReview(final JobClient client, final ActivatedJob job) {
         try {
             Map<String, Object> variables = job.getVariablesAsMap();
-            String restaurantId = variables.get("restaurantId").toString();
+            String restaurantId = variables.get(RESTAURANT_ID).toString();
             ReviewDTO reviewDTO = objectMapper.convertValue(variables.get("review"), ReviewDTO.class);
             ReviewDTO createdReview = apiService.createReview(restaurantId, reviewDTO);
 
@@ -152,7 +157,7 @@ public class RestaurantWorker {
                     .send()
                     .join();
         } catch (Exception e) {
-            System.err.println("Exception in createReview: " + e.getMessage());
+            logger.error("Exception in createReview", e);
             client.newFailCommand(job.getKey())
                     .retries(job.getRetries() - 1)
                     .errorMessage(e.getMessage())
@@ -161,18 +166,18 @@ public class RestaurantWorker {
         }
     }
 
-    @ZeebeWorker(type = "updateReview")
+    @JobWorker(type = "updateReview")
     public void updateReview(final JobClient client, final ActivatedJob job) {
         try {
             Map<String, Object> variables = job.getVariablesAsMap();
-            String restaurantId = variables.get("restaurantId").toString();
+            String restaurantId = variables.get(RESTAURANT_ID).toString();
             String reviewId = variables.get("reviewId").toString();
             ReviewDTO reviewDTO = objectMapper.convertValue(variables.get("review"), ReviewDTO.class);
 
             apiService.updateReview(restaurantId, reviewId, reviewDTO);
             client.newCompleteCommand(job.getKey()).send().join();
         } catch (Exception e) {
-            System.err.println("Exception in updateReview: " + e.getMessage());
+            logger.error("Exception in updateReview: ", e);
             client.newFailCommand(job.getKey())
                     .retries(job.getRetries() - 1)
                     .errorMessage(e.getMessage())
@@ -181,17 +186,17 @@ public class RestaurantWorker {
         }
     }
 
-    @ZeebeWorker(type = "deleteReview")
+    @JobWorker(type = "deleteReview")
     public void deleteReview(final JobClient client, final ActivatedJob job) {
         try {
             Map<String, Object> variables = job.getVariablesAsMap();
-            String restaurantId = variables.get("restaurantId").toString();
+            String restaurantId = variables.get(RESTAURANT_ID).toString();
             String reviewId = variables.get("reviewId").toString();
 
             apiService.deleteReview(restaurantId, reviewId);
             client.newCompleteCommand(job.getKey()).send().join();
         } catch (Exception e) {
-            System.err.println("Exception in deleteReview: " + e.getMessage());
+            logger.error("Exception in deleteReview: ", e);
             client.newFailCommand(job.getKey())
                     .retries(job.getRetries() - 1)
                     .errorMessage(e.getMessage())
@@ -199,6 +204,4 @@ public class RestaurantWorker {
                     .join();
         }
     }
-
-
 }

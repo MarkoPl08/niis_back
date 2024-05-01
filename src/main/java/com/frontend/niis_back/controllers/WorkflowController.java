@@ -3,6 +3,8 @@ package com.frontend.niis_back.controllers;
 import io.camunda.zeebe.client.ZeebeClient;
 import io.camunda.zeebe.client.api.response.ProcessInstanceEvent;
 import io.camunda.zeebe.client.api.response.ProcessInstanceResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import java.util.Map;
 public class WorkflowController {
 
     private final ZeebeClient zeebeClient;
+    private static final Logger logger = LoggerFactory.getLogger(WorkflowController.class);
 
     @Autowired
     public WorkflowController(ZeebeClient zeebeClient) {
@@ -23,7 +26,7 @@ public class WorkflowController {
     }
 
     @PostMapping("/get-restaurants")
-    public ResponseEntity<?> startWorkflowInstance() {
+    public ResponseEntity<String> startWorkflowInstance() {
         try {
             ProcessInstanceResult result = zeebeClient.newCreateInstanceCommand()
                     .bpmnProcessId("getAllRestaurantsProcess")
@@ -35,13 +38,13 @@ public class WorkflowController {
 
             return ResponseEntity.ok("Workflow instance started with ID: " + result.getProcessInstanceKey());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to start workflow instance", e);
             return ResponseEntity.internalServerError().body("Failed to start workflow instance: " + e.getMessage());
         }
     }
 
     @PostMapping("/create-restaurant")
-    public ResponseEntity<?> startCreateRestaurantProcess(@RequestBody Map<String, Object> restaurantData) {
+    public ResponseEntity<String> startCreateRestaurantProcess(@RequestBody Map<String, Object> restaurantData) {
         try {
             ProcessInstanceEvent instance = zeebeClient.newCreateInstanceCommand()
                     .bpmnProcessId("Process_0ct8wfn")
@@ -51,13 +54,13 @@ public class WorkflowController {
                     .join();
             return ResponseEntity.ok().body("Create restaurant process started successfully with instance ID: " + instance.getProcessInstanceKey());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to start create restaurant process: " + e.getMessage());
+            logger.error("Failed to start create restaurant process", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start create restaurant process: " + e.getMessage());
         }
     }
 
     @PostMapping("/update-restaurant")
-    public ResponseEntity<?> startUpdateRestaurantProcess(@RequestBody Map<String, Object> updateData) {
+    public ResponseEntity<String> startUpdateRestaurantProcess(@RequestBody Map<String, Object> updateData) {
         try {
             ProcessInstanceEvent instance = zeebeClient.newCreateInstanceCommand()
                     .bpmnProcessId("Process_01n56je")
@@ -67,13 +70,13 @@ public class WorkflowController {
                     .join();
             return ResponseEntity.ok().body("Update restaurant process started successfully with instance ID: " + instance.getProcessInstanceKey());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to start update restaurant process: " + e.getMessage());
+            logger.error("Failed to start update restaurant process", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start update restaurant process: " + e.getMessage());
         }
     }
 
     @PostMapping("/delete-restaurant")
-    public ResponseEntity<?> startDeleteRestaurantProcess(@RequestBody Map<String, Object> deleteData) {
+    public ResponseEntity<String> startDeleteRestaurantProcess(@RequestBody Map<String, Object> deleteData) {
         try {
             ProcessInstanceEvent instance = zeebeClient.newCreateInstanceCommand()
                     .bpmnProcessId("Process_0yfmb3p")
@@ -83,13 +86,13 @@ public class WorkflowController {
                     .join();
             return ResponseEntity.ok().body("Delete restaurant process started successfully with instance ID: " + instance.getProcessInstanceKey());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to start delete restaurant process: " + e.getMessage());
+            logger.error("Failed to start delete restaurant process", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start delete restaurant process: " + e.getMessage());
         }
     }
 
     @PostMapping("/get-reviews")
-    public ResponseEntity<?> startGetReviewsProcess(@RequestBody Map<String, Object> requestData) {
+    public ResponseEntity<String> startGetReviewsProcess(@RequestBody Map<String, Object> requestData) {
         try {
             ProcessInstanceEvent instance = zeebeClient.newCreateInstanceCommand()
                     .bpmnProcessId("Process_1s5o5wu")
@@ -99,13 +102,13 @@ public class WorkflowController {
                     .join();
             return ResponseEntity.ok().body("Get reviews process started successfully with instance ID: " + instance.getProcessInstanceKey());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to start get reviews process: " + e.getMessage());
+            logger.error("Failed to start get reviews process", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start get reviews process: " + e.getMessage());
         }
     }
 
     @PostMapping("/create-review")
-    public ResponseEntity<?> startCreateReviewProcess(@RequestBody Map<String, Object> reviewData) {
+    public ResponseEntity<String> startCreateReviewProcess(@RequestBody Map<String, Object> reviewData) {
         try {
             ProcessInstanceEvent instance = zeebeClient.newCreateInstanceCommand()
                     .bpmnProcessId("Process_1ujbj8j")
@@ -115,14 +118,14 @@ public class WorkflowController {
                     .join();
             return ResponseEntity.ok().body("Create review process started successfully with instance ID: " + instance.getProcessInstanceKey());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to start create review process: " + e.getMessage());
+            logger.error("Failed to start create review process", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start create review process: " + e.getMessage());
         }
     }
 
     @PostMapping("/update-review")
-    public ResponseEntity<?> startUpdateReviewProcess(@RequestBody Map<String, Object> reviewData) {
-        System.out.println("Received review update data: " + reviewData);
+    public ResponseEntity<String> startUpdateReviewProcess(@RequestBody Map<String, Object> reviewData) {
+        logger.info("Received review update data: {}", reviewData);
         try {
             ProcessInstanceEvent instance = zeebeClient.newCreateInstanceCommand()
                     .bpmnProcessId("Process_0udvjr2")
@@ -132,14 +135,13 @@ public class WorkflowController {
                     .join();
             return ResponseEntity.ok().body("Update review process started successfully with instance ID: " + instance.getProcessInstanceKey());
         } catch (Exception e) {
-            System.err.println("Error starting update review process: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to start update review process: " + e.getMessage());
+            logger.error("Error starting update review process", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start update review process: " + e.getMessage());
         }
     }
 
     @PostMapping("/delete-review")
-    public ResponseEntity<?> startDeleteReviewProcess(@RequestBody Map<String, Object> deleteData) {
+    public ResponseEntity<String> startDeleteReviewProcess(@RequestBody Map<String, Object> deleteData) {
         try {
             ProcessInstanceEvent instance = zeebeClient.newCreateInstanceCommand()
                     .bpmnProcessId("Process_10ui8a0")
@@ -149,8 +151,8 @@ public class WorkflowController {
                     .join();
             return ResponseEntity.ok().body("Delete review process started successfully with instance ID: " + instance.getProcessInstanceKey());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to start delete review process: " + e.getMessage());
+            logger.error("Failed to start delete review process", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start delete review process: " + e.getMessage());
         }
     }
 

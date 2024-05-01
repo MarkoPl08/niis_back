@@ -5,6 +5,10 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 
 public class ReviewAdapter {
 
+    private ReviewAdapter() {
+        throw new UnsupportedOperationException("Utility class and cannot be instantiated");
+    }
+
     public static ReviewDTO adapt(QueryDocumentSnapshot document) {
         ReviewDTO dto = new ReviewDTO();
         dto.setId(document.getId());
