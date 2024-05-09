@@ -1,4 +1,4 @@
-package com.frontend.niis_back.delegates;
+package com.frontend.niis_back.workers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.frontend.niis_back.dto.RestaurantDTO;
@@ -17,15 +17,16 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class RestaurantWorker {
+public class Worker {
 
-    private static final Logger logger = LoggerFactory.getLogger(RestaurantWorker.class);
+    private static final Logger logger = LoggerFactory.getLogger(Worker.class);
     private static final String RESTAURANT_ID = "restaurantId";
+    private static final String RESTAURANT = "restaurant";
     private final ApiService apiService;
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public RestaurantWorker(ApiService apiService, ObjectMapper objectMapper) {
+    public Worker(ApiService apiService, ObjectMapper objectMapper) {
         this.apiService = apiService;
         this.objectMapper = objectMapper;
     }
@@ -55,25 +56,22 @@ public class RestaurantWorker {
 
     @JobWorker(type = "createRestaurant")
     public void createRestaurant(final JobClient client, final ActivatedJob job) {
+        Map<String, Object> variables = job.getVariablesAsMap();
+        logger.info("Received Variables Map: {}", variables);
+
         try {
-            Map<String, Object> variables = job.getVariablesAsMap();
-            logger.info("Received Variables Map: {}", variables);
-
-            Object restaurantObj = variables.get("restaurant");
-            if (restaurantObj instanceof Map) {
-                Map<String, Object> restaurantMap = (Map<String, Object>) restaurantObj;
+            if (variables.containsKey(RESTAURANT) && variables.get(RESTAURANT) instanceof Map) {
+                Map<String, Object> restaurantMap = (Map<String, Object>) variables.get(RESTAURANT);
                 String restaurantJson = objectMapper.writeValueAsString(restaurantMap);
-                logger.info("Received restaurant variable (JSON dump): {}", restaurantJson);
-
                 RestaurantDTO restaurantDTO = objectMapper.readValue(restaurantJson, RestaurantDTO.class);
                 RestaurantDTO createdRestaurant = apiService.createRestaurant(restaurantDTO);
-
                 client.newCompleteCommand(job.getKey())
                         .variables(Collections.singletonMap("createdRestaurantId", createdRestaurant.getId()))
                         .send()
                         .join();
             } else {
-                throw new IllegalStateException("Expected a Map for 'restaurant', received type: " + (restaurantObj == null ? "null" : restaurantObj.getClass().getSimpleName()));
+                logger.error("Invalid or missing 'restaurant' variable: {}", variables.get(RESTAURANT));
+                throw new IllegalStateException("Expected a Map for 'restaurant', but it was missing or incorrect type");
             }
         } catch (Exception e) {
             logger.error("Exception in createRestaurant", e);
@@ -85,11 +83,12 @@ public class RestaurantWorker {
         }
     }
 
+
     @JobWorker(type = "updateRestaurant")
     public void updateRestaurant(final JobClient client, final ActivatedJob job) {
         try {
             Map<String, Object> variables = job.getVariablesAsMap();
-            String restaurantJson = objectMapper.writeValueAsString(variables.get("restaurant"));
+            String restaurantJson = objectMapper.writeValueAsString(variables.get(RESTAURANT));
 
             RestaurantDTO restaurantDTO = objectMapper.readValue(restaurantJson, RestaurantDTO.class);
             apiService.updateRestaurant(restaurantDTO.getId(), restaurantDTO);
@@ -146,10 +145,17 @@ public class RestaurantWorker {
 
     @JobWorker(type = "createReview")
     public void createReview(final JobClient client, final ActivatedJob job) {
+        Map<String, Object> variables = job.getVariablesAsMap();
+
         try {
-            Map<String, Object> variables = job.getVariablesAsMap();
-            String restaurantId = variables.get(RESTAURANT_ID).toString();
-            ReviewDTO reviewDTO = objectMapper.convertValue(variables.get("review"), ReviewDTO.class);
+            String restaurantId = (String) variables.get(RESTAURANT_ID);
+            Map<String, Object> reviewMap = (Map<String, Object>) variables.get("review");
+
+            if (restaurantId == null || reviewMap == null) {
+                throw new IllegalStateException("Restaurant ID or Review details are missing");
+            }
+
+            ReviewDTO reviewDTO = objectMapper.convertValue(reviewMap, ReviewDTO.class);
             ReviewDTO createdReview = apiService.createReview(restaurantId, reviewDTO);
 
             client.newCompleteCommand(job.getKey())
